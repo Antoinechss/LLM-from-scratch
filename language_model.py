@@ -6,7 +6,8 @@ from torch.nn import functional as F
 from configs import SEED, NUM_EMBED_DIMS, BLOCK_SIZE, device, NUM_HEADS
 from dataset import VOCAB_SIZE
 from head import MultiHeadAttention
-from layers import FeedFoward
+from layers import FeedForward
+from transformer import Block
 
 torch.manual_seed(SEED)
 
@@ -22,8 +23,11 @@ class BigramLanguageModel(nn.Module):
         super().__init__()
         self.token_embedding_table = nn.Embedding(VOCAB_SIZE, NUM_EMBED_DIMS)
         self.position_embedding_table = nn.Embedding(BLOCK_SIZE, NUM_EMBED_DIMS)
-        self.self_att_heads = MultiHeadAttention(NUM_HEADS, NUM_EMBED_DIMS//NUM_HEADS)
-        self.feed_forward = FeedFoward(NUM_EMBED_DIMS)
+        self.blocks = nn.Sequential(
+            Block(NUM_EMBED_DIMS, NUM_HEADS), 
+            Block(NUM_EMBED_DIMS, NUM_HEADS),
+            Block(NUM_EMBED_DIMS, NUM_HEADS),
+        )
         self.lm_head = nn.Linear(NUM_EMBED_DIMS, VOCAB_SIZE)
 
 
@@ -47,8 +51,7 @@ class BigramLanguageModel(nn.Module):
             torch.arange(T, device=device)
         )  # (T, C)
         x = token_emb + pos_emb
-        x = self.self_att_heads(x)  # Apply one head of self attention
-        x = self.feed_forward(x) 
+        x = self.blocks(x)
         logits = self.lm_head(x)  # (B, T, VOCAB_SIZE)
 
         if targets is None:
