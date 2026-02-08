@@ -11,9 +11,9 @@ class FeedForward(nn.Module):
     def __init__(self, num_embedings):
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(num_embedings, 4 * num_embedings),  # Expand
+            nn.Linear(num_embedings, num_embedings),  # Expand
             nn.ReLU(),
-            nn.Linear(4 * num_embedings, num_embedings),  # Project back
+            nn.Linear(num_embedings, num_embedings),  # Project back
         )
 
     def forward(self, x):

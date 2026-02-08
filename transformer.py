@@ -13,6 +13,6 @@ class Block(nn.Module):
         self.feed_forward = FeedForward(num_embeddings)
 
     def forward(self, x):
-        x = self.self_att_heads(x)
-        x = self.feed_forward(x)
+        x = x + self.self_att_heads(x)
+        x = x + self.feed_forward(x)
         return x

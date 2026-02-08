@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from configs import SEED, BLOCK_SIZE, HEAD_SIZE, NUM_EMBED_DIMS
+from configs import SEED, BLOCK_SIZE, NUM_EMBED_DIMS
 import torch.nn.functional as F
 
 torch.manual_seed(SEED)
@@ -39,8 +39,10 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, head_size):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.projection = nn.Linear(NUM_EMBED_DIMS, NUM_EMBED_DIMS)
 
     def forward(self, x):
         # Concatenate outputs from all heads along the channel dimension
-        out = torch.cat([h(x) for h in self.heads], dim=-1)
-        return out  # Output shape: (B, T, num_heads * head_size) = (B, T, NUM_EMBED_DIMS)
+        x = torch.cat([h(x) for h in self.heads], dim=-1)
+        x = self.projection(x)
+        return x  # Output shape: (B, T, num_heads * head_size) = (B, T, NUM_EMBED_DIMS)

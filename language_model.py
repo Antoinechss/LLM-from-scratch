@@ -5,8 +5,6 @@ import torch.nn as nn
 from torch.nn import functional as F
 from configs import SEED, NUM_EMBED_DIMS, BLOCK_SIZE, device, NUM_HEADS
 from dataset import VOCAB_SIZE
-from head import MultiHeadAttention
-from layers import FeedForward
 from transformer import Block
 
 torch.manual_seed(SEED)
