@@ -14,5 +14,5 @@ test_text = test_data[0]['text']
 
 # Dataset params
 chars = sorted(list(set(train_text)))
-vocab_size = len(chars)
+VOCAB_SIZE = len(chars)
 
