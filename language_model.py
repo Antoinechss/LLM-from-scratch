@@ -3,8 +3,10 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from configs import SEED, NUM_EMBED_DIMS, BLOCK_SIZE, device  
+from configs import SEED, NUM_EMBED_DIMS, BLOCK_SIZE, device, NUM_HEADS
 from dataset import VOCAB_SIZE
+from head import MultiHeadAttention
+from layers import FeedFoward
 
 torch.manual_seed(SEED)
 
@@ -20,35 +22,43 @@ class BigramLanguageModel(nn.Module):
         super().__init__()
         self.token_embedding_table = nn.Embedding(VOCAB_SIZE, NUM_EMBED_DIMS)
         self.position_embedding_table = nn.Embedding(BLOCK_SIZE, NUM_EMBED_DIMS)
-        self.lm_head = nn.linear(NUM_EMBED_DIMS, VOCAB_SIZE)
+        self.self_att_heads = MultiHeadAttention(NUM_HEADS, NUM_EMBED_DIMS//NUM_HEADS)
+        self.feed_forward = FeedFoward(NUM_EMBED_DIMS)
+        self.lm_head = nn.Linear(NUM_EMBED_DIMS, VOCAB_SIZE)
+
 
     def forward(self, idx, targets=None):
         """
         Inputs:
-            idx: Tensor of token indices (shape: batch_size × block_size)
-            targets: Tensor of target token indices (same shape)
+        idx: Tensor of token indices (shape: batch_size × block_size)
+        targets: Tensor of target token indices (same shape)
 
-            self.token_embedding_table(idx): Looks up the embedding for each token in idx.
+        self.token_embedding_table(idx): Looks up the embedding for each token in idx.
 
         Output shape: (batch_size, block_size, vocab_size)
-            Each "channel" (the last dimension) represents the scores (logits) for each possible next character in the vocabulary.
-            For each character in the input, the model predicts which character comes next (bigram modeling).
-            F.cross_entropy(logits, targets): Computes the loss between the predicted logits and the actual next character.
+        Each "channel" (the last dimension) represents the scores (logits) for each possible next character in the vocabulary.
+        For each character in the input, the model predicts which character comes next (bigram modeling).
+        F.cross_entropy(logits, targets): Computes the loss between the predicted logits and the actual next character.
         """
         B, T = idx.shape
 
         token_emb = self.token_embedding_table(idx)  # (B, T, NUM_EMBED_DIMS)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=device)) # (T, C)
-        logits = self.lm_head(token_emb + pos_emb)  # (B, T, VOCAB_SIZE)
-        
-        
+        pos_emb = self.position_embedding_table(
+            torch.arange(T, device=device)
+        )  # (T, C)
+        x = token_emb + pos_emb
+        x = self.self_att_heads(x)  # Apply one head of self attention
+        x = self.feed_forward(x) 
+        logits = self.lm_head(x)  # (B, T, VOCAB_SIZE)
+
         if targets is None:
             loss = None
         else:
             B, T, C = logits.shape
-            logits = logits.view(B * T, C) # Reshape for cross_entropy format expectations
+            logits = logits.view(
+                B * T, C
+            )  # Reshape for cross_entropy format expectations
             targets = targets.view(B * T)
-
             loss = F.cross_entropy(logits, targets)
 
         return logits, loss
@@ -60,9 +70,11 @@ class BigramLanguageModel(nn.Module):
         Output idx (B, T+1) new seq with additional generated token
         """
         for _ in range(max_new_tokens):
+            # Ensure we never pass more than BLOCK_SIZE elements 
+            idx_cond = idx[:, -BLOCK_SIZE:]
             logits, loss = self(
-                idx
-            )  # Get predictions for next characater : forward function
+                idx_cond
+            )  # Get predictions for next character : forward function
             logits = logits[:, -1, :]  # Focus on last time step (most recent character)
             probs = F.softmax(
                 logits, dim=-1
@@ -72,3 +84,5 @@ class BigramLanguageModel(nn.Module):
                 (idx, idx_next), dim=1
             )  # (B, T+1) Append to running sequence
         return idx  # Returns extended sequence with newly generated tokens
+
+

@@ -3,10 +3,9 @@ from train import train
 from tokenizer import decode
 import torch
 from configs import MAX_TOKEN_GENERATION, device
-from dataset import VOCAB_SIZE
 
 # Instanciate model:
-model = BigramLanguageModel(VOCAB_SIZE)
+model = BigramLanguageModel()
 # Train model:
 train(model)
 # Test text generation:
