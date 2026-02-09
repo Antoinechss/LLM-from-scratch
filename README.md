@@ -35,7 +35,7 @@ LLM-from-scratch/
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone [your-repo-url](https://github.com/Antoinechss/LLM-from-scratch.git)
 cd LLM-from-scratch
 
 # Create virtual environment
