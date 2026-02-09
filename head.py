@@ -15,6 +15,7 @@ class Head(nn.Module):
         self.query = nn.Linear(NUM_EMBED_DIMS, head_size, bias=False)
         self.value = nn.Linear(NUM_EMBED_DIMS, head_size, bias=False)
         self.register_buffer("tril", torch.tril(torch.ones(BLOCK_SIZE, BLOCK_SIZE)))
+        self.dropout = nn.Dropout(0.1)
 
     def forward(self, x):
         B, T, C = x.shape
@@ -29,6 +30,7 @@ class Head(nn.Module):
         )  # (B, T, T)
         # Normalize the weights to sum 1
         weights = F.softmax(weights, dim=-1)
+        weights = self.dropout(weights)
         # Apply to the values v
         return weights @ v  # (B, T, C)
 

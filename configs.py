@@ -1,8 +1,8 @@
 device = 'cpu' 
 SEED = 1337
-BATCH_SIZE = 32  # How many independent sequences will be processed in parallel
-BLOCK_SIZE = 8  # Max context length for prediction
-learning_rate = 1e-3
+BATCH_SIZE = 64  # How many independent sequences will be processed in parallel
+BLOCK_SIZE = 256  # Max context length for prediction
+learning_rate = 3e-4
 MAX_ITERS = 10000
 EVAL_INTERVAL = 30
 MAX_TOKEN_GENERATION = 500

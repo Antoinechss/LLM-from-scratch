@@ -4,10 +4,10 @@ from tokenizer import decode
 import torch
 from configs import MAX_TOKEN_GENERATION, device
 
-# Instanciate model:
+# Instantiate model:
 model = BigramLanguageModel()
-# Train model:
-train(model)
+# Train model and get losses:
+train_losses, val_losses, iterations = train(model)
 # Test text generation:
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(model.generate(context, max_new_tokens=MAX_TOKEN_GENERATION)[0].tolist()))
