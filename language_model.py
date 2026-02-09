@@ -25,6 +25,7 @@ class BigramLanguageModel(nn.Module):
             Block(NUM_EMBED_DIMS, NUM_HEADS), 
             Block(NUM_EMBED_DIMS, NUM_HEADS),
             Block(NUM_EMBED_DIMS, NUM_HEADS),
+            nn.LayerNorm(NUM_EMBED_DIMS), 
         )
         self.lm_head = nn.Linear(NUM_EMBED_DIMS, VOCAB_SIZE)
 
